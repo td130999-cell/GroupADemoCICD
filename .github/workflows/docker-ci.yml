@@ -1,0 +1,56 @@
+name: CI/CD Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Cấp quyền ghi package cho GitHub Token
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Bước 1: Kéo code từ repo về runner
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Bước 2: Thiết lập Docker Buildx
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      # Bước 3: Đăng nhập vào GitHub Container Registry (ghcr.io)
+      - name: Log in to GitHub Container Registry
+        uses: actions/docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Bước 4: Tạo thẻ (tags) tự động cho Image
+      - name: Extract metadata
+        id: meta
+        uses: actions/docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      # Bước 5: Build và đẩy Docker image lên Registry
+      - name: Build and push Docker image
+        uses: actions/docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
