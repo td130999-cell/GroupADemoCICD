@@ -45,7 +45,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  # 2. Job kéo image và chạy trực tiếp trên máy cá nhân của bạn
+  # 2. Job kéo image và tự động bật Docker trực tiếp trên máy của bạn
   deploy-to-local:
     name: Auto Deploy on My PC
     needs: build-and-push
@@ -55,13 +55,17 @@ jobs:
       - name: Pull and run latest Docker container
         shell: powershell
         run: |
-          Write-Host "Dang tai image moi nhat ve may..."
+          Write-Host "===================================================="
+          Write-Host "=> [1/4] Phat hien code moi tu thanh vien trong nhom!"
+          Write-Host "=> Dang tai Docker image moi nhat ve may..."
           docker pull ghcr.io/${{ github.repository }}:latest
 
-          Write-Host "Xoa container cu..."
+          Write-Host "=> [2/4] Dang don dep container cu..."
           docker rm -f my-demo-app -ErrorAction SilentlyContinue
 
-          Write-Host "Khoi dong container moi..."
+          Write-Host "=> [3/4] Dang tu động khoi dong container moi..."
           docker run -d --name my-demo-app -p 8080:80 --restart always ghcr.io/${{ github.repository }}:latest
           
-          Write-Host "Thanh cong! Hay kiem tra lai localhost:8080"
+          Write-Host "=> [4/4] HOAN TAT! Ung dung da duoc cap nhat thanh cong."
+          Write-Host "=> Vui long truy cap: http://localhost:8080 (nhan Ctrl + F5)"
+          Write-Host "===================================================="
