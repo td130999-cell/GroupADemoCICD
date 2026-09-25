@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 1. Ứng dụng Web / Backend
+  app:
+    image: ghcr.io/td130999-cell/groupademocicd:latest
+    build: .
+    container_name: demo_app_qc
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_NAME=demo_db
+      - DB_USER=qc_tester
+      - DB_PASSWORD=qc_password_2026
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # 2. Database MySQL (Tự động tạo bảng & nạp dữ liệu mẫu)
+  database:
+    image: mysql:8.0
+    container_name: demo_mysql_qc
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_admin_password
+      MYSQL_DATABASE: demo_db
+      MYSQL_USER: qc_tester
+      MYSQL_PASSWORD: qc_password_2026
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+      - mysql_qc_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -proot_admin_password || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # 3. Cloudflare Quick Tunnel (Tự động phát link HTTPS công khai cho QC - Miễn phí 100%)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: demo_tunnel_qc
+    restart: always
+    command: tunnel --no-autoupdate --url http://app:80
+    depends_on:
+      - app
+
+volumes:
+  mysql_qc_data:
