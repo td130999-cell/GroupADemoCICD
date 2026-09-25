@@ -1,0 +1,15 @@
+services:
+  my-demo-app:
+    image: ghcr.io/td130999-cell/groupademocicd:latest
+    container_name: my-demo-app
+    restart: always
+    ports:
+      - "8080:80"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock
+    command: --interval 20 my-demo-app
