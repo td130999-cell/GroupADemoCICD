@@ -58,13 +58,13 @@ jobs:
           Write-Host "===================================================="
           Write-Host "=> [1/4] Phat hien code moi tu thanh vien trong nhom!"
           Write-Host "=> Dang tai Docker image moi nhat ve may..."
-          docker pull ghcr.io/${{ github.repository }}:latest
+          docker pull ghcr.io/${{ github.repository_owner }}/groupademocicd:latest
 
           Write-Host "=> [2/4] Dang don dep container cu..."
-          docker rm -f my-demo-app -ErrorAction SilentlyContinue
+          docker rm -f my-demo-app 2>$null || true
 
-          Write-Host "=> [3/4] Dang tu động khoi dong container moi..."
-          docker run -d --name my-demo-app -p 8080:80 --restart always ghcr.io/${{ github.repository }}:latest
+          Write-Host "=> [3/4] Dang tu dong khoi dong container moi..."
+          docker run -d --name my-demo-app -p 8080:80 --restart always ghcr.io/${{ github.repository_owner }}/groupademocicd:latest
           
           Write-Host "=> [4/4] HOAN TAT! Ung dung da duoc cap nhat thanh cong."
           Write-Host "=> Vui long truy cap: http://localhost:8080 (nhan Ctrl + F5)"
